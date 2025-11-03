@@ -1,32 +1,69 @@
-# Activities Examples
+# temporal-infrastructure-pipeline
 
-This sample shows use cases for Activities:
+A demo project showing how Temporal orchestrates infrastructure provisioning workflows. This simulates an API-Driven, self-service EC2 provisioning pipeline using Terraform.
 
-- [`makeHTTPRequest`](./src/activities/index.ts): Make an external HTTP request in an Activity (using `axios`).
-- [`cancellableFetch`](./src/activities/cancellable-fetch.ts): Make a cancellable HTTP request with [cancellationSignal](https://typescript.temporal.io/api/classes/client.CancelledFailure).
-- [`doSomethingAsync`](./src/activities/async-completion.ts): Complete an Activity async with [`AsyncCompletionClient`](https://typescript.temporal.io/api/classes/client.AsyncCompletionClient/#complete).
+## What This Does
 
-More Activity samples are [listed here](https://github.com/temporalio/samples-typescript/#activity-apis-and-design-patterns).
+The workflow provisions an EC2 instance through these steps:
 
-### Testing
+1. Create a Terraform run
+2. Poll the run status of the run with heartbeats
+3. If successful, send notifications in parallel
+    - Slack Notification
+    - Updated ServiceNow Ticket
+4. If failed, destroy the Terraform run and fail the workflow
 
-- Mocha: Run the tests in [`src/mocha/`](./src/mocha/) with:
-  - `npm test`: run once
-  - `npm run test.watch`: run when files change
-  - `npm run test.coverage`: run with coverage report
-- Jest: `npm run jest` runs tests outside the `mocha/` directory:
-  - [`src/workflows.test.ts`](./src/workflows.test.ts)
-  - [`src/activities/make-http-request.test.ts`](./src/activities/make-http-request.test.ts)
+## Temporal Features Demonstrated
 
-### Running this sample
+- **Idempotent activities** - Uses workflow and activity IDs to prevent duplicate Terraform runs
+- **Activity heartbeats** - Long-running poll operation sends progress updates
+- **Retry policies** - Different retry strategies for different activity types
+- **Parallel execution** - Notifications run simultaneously
+- **Error handling** - Automatic cleanup on failure
+- **Durable execution** - Workflow survives worker restarts
 
-1. `temporal server start-dev` to start [Temporal Server](https://github.com/temporalio/cli/#installation).
-2. `npm install` to install dependencies.
-3. `npm run start.watch` to start the Worker.
-4. In another shell, `npm run workflow` to run the Workflow.
-
-The Workflow should make an HTTP request to [httpbin.org](https://httpbin.org/) and then return:
+## Project Structure
 
 ```
-The answer is 42
+src/
+├── workflows.ts              # Main workflow orchestration
+├── client.ts                 # Workflow execution trigger
+├── worker.ts                 # Worker process
+├── activities/
+│   ├── createTerraformRun.ts       # Idempotent run creation
+│   ├── pollTerraformRun.ts         # Poll with heartbeats
+│   ├── destroyTerraformRun.ts      # Cleanup on failure
+│   ├── send-slack-notification.ts  # Send Slack notification
+│   └── update-service-now.ts       # Update ServiceNow ticket
+└── utils/
+    └── httpbin-client.ts     # Mock HTTP client for demo (replaces real APIs)
+```
+
+## Setup
+
+Install dependencies:
+```bash
+npm install
+```
+
+Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+Start Temporal server:
+```bash
+temporal server start-dev
+```
+
+## Running the Workflow
+
+Start the worker:
+```bash
+npm start
+```
+
+In another terminal, trigger the workflow:
+```bash
+npm run workflow
 ```
