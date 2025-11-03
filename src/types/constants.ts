@@ -1,0 +1,1 @@
+export const TERRAFORM_RUN_STAGES = ['init', 'plan', 'apply'];
