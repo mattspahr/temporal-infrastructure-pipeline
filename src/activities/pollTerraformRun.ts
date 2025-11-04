@@ -1,29 +1,16 @@
-import { Context, sleep } from "@temporalio/activity";
-import { post } from "../utils/httpbin-client";
+import { Context } from "@temporalio/activity";
+import { mockServiceClient } from "../utils/mock-service-client";
 
 export const pollTerraformRun = async (runId: string): Promise<string> => {
-  const context = Context.current();
-  const STATUSES = ["pending", "planning", "applying", "applied"];
+  const { heartbeat } = Context.current();
+  const PHASES = ["pending", "planning", "applying", "applied"];
 
-  console.log(`[Activity] Polling Terraform run ${runId}`);
+  for (const phase of PHASES) {
+    const result = await mockServiceClient.terraform.pollRunStatus(runId, phase);
 
-  for (const status of STATUSES) {
-    if (context.cancellationSignal.aborted) {
-      console.log(`[Activity] Poll cancelled for ${runId}`);
-      throw new Error("Polling cancelled");
-    }
+    heartbeat(result.status)
 
-    const result = await post("service=terraform&action=heartbeat", {
-      runId,
-      status,
-    });
-
-    context.heartbeat(result.status);
-    console.log(`[Heartbeat] ${runId} -> ${result.status}`);
-
-    await sleep(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
-
-  console.log(`[Activity] Terraform run ${runId} completed successfully`);
   return "success";
 }

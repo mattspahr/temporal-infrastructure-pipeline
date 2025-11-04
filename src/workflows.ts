@@ -1,5 +1,6 @@
 import { ApplicationFailure, proxyActivities, sleep } from '@temporalio/workflow';
 import * as activities from './activities';
+import { WorkflowResponse } from './types/WorkflowResponse';
 
 const { createTerraformRun } = proxyActivities<typeof activities>({
   startToCloseTimeout: '10 seconds',
@@ -29,7 +30,7 @@ const { runAnsiblePlaybook } = proxyActivities<typeof activities>({
   },
 });
 
-const { sendSlackNotification, updateServiceNow } = proxyActivities<typeof activities>({
+const { sendSlackNotification, registerWithCMDB } = proxyActivities<typeof activities>({
   startToCloseTimeout: "10 seconds",
   retry: { initialInterval: "10 seconds", maximumAttempts: 2, backoffCoefficient: 2.0 },
 });
@@ -43,7 +44,7 @@ const { destroyTerraformRun } = proxyActivities<typeof activities>({
   },
 });
 
-export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): Promise<{ terraformRunId: string, instanceName: string, status: string }> => {
+export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): Promise<WorkflowResponse> => {
   const { instanceName } = params;
 
   const terraformRunId = await createTerraformRun(instanceName);
@@ -51,22 +52,27 @@ export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): 
   const result = await pollTerraformRun(terraformRunId);
 
   if (result !== "success") {
-    await destroyTerraformRun(terraformRunId);
     throw ApplicationFailure.create({
       message: `Terraform run ${terraformRunId} failed`,
       type: "TerraformRunFailed",
     });
   }
 
-  console.log(`[Workflow] Provisioned instance ${instanceName} (${terraformRunId}) successfully.`);
+  try {
+    await sleep('10 seconds');
 
-  await sleep('10 seconds');
-
-  await runAnsiblePlaybook(instanceName);
+    await runAnsiblePlaybook(instanceName);
+  } catch (error) {
+    await destroyTerraformRun(terraformRunId);
+    throw ApplicationFailure.create({
+      message: `Ansible playbook failed for instance ${instanceName}`,
+      type: "AnsiblePlaybookFailed",
+    });
+  }
 
   await Promise.all([
+    registerWithCMDB(instanceName),
     sendSlackNotification(instanceName),
-    updateServiceNow(instanceName),
   ]);
 
   return {
@@ -74,4 +80,5 @@ export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): 
     instanceName,
     status: "success",
   };
+
 }

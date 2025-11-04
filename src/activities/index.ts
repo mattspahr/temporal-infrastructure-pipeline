@@ -1,5 +1,5 @@
-export { sendSlackNotification } from './send-slack-notification';
-export { updateServiceNow } from './update-service-now';
+export { sendSlackNotification } from './sendSlackNotification';
+export { registerWithCMDB } from './registerWithCMDB';
 export { createTerraformRun } from './createTerraformRun';
 export { pollTerraformRun } from './pollTerraformRun';
 export { destroyTerraformRun } from './destroyTerraformRun';
