@@ -7,20 +7,14 @@ A demo project showing how Temporal orchestrates infrastructure provisioning wor
 The workflow provisions an EC2 instance through these steps:
 
 1. Create a Terraform run
-2. Poll the run status of the run with heartbeats
-3. If successful, send notifications in parallel
-    - Slack Notification
-    - Updated ServiceNow Ticket
-4. If failed, destroy the Terraform run and fail the workflow
+2. Poll the run status of the run
+3. Run Ansible playbook
+    - If successful, send notifications in parallel
+        - Slack Notification
+        - Update CMDB Record
+    - If failed, destroy the Terraform run and fail the workflow
 
-## Temporal Features Demonstrated
-
-- **Idempotent activities** - Uses workflow and activity IDs to prevent duplicate Terraform runs
-- **Activity heartbeats** - Long-running poll operation sends progress updates
-- **Retry policies** - Different retry strategies for different activity types
-- **Parallel execution** - Notifications run simultaneously
-- **Error handling** - Automatic cleanup on failure
-- **Durable execution** - Workflow survives worker restarts
+![Workflow Diagram](./diagrams/workflow-text.png)
 
 ## Project Structure
 
@@ -30,14 +24,14 @@ src/
 ├── client.ts                 # Workflow execution trigger
 ├── worker.ts                 # Worker process
 ├── activities/
-│   ├── createTerraformRun.ts       # Idempotent run creation
-│   ├── pollTerraformRun.ts         # Poll with heartbeats
+│   ├── createTerraformRun.ts       # Terraform run creation
+│   ├── pollTerraformRun.ts         # Poll status of run
 │   ├── destroyTerraformRun.ts      # Cleanup on failure
-│   ├── run-ansible-playbook.ts     # Run Ansible playbook
+│   ├── run-ansible-playbook.ts     # Run Ansible playbook on new instance
 │   ├── send-slack-notification.ts  # Send Slack notification
-│   └── update-service-now.ts       # Update ServiceNow ticket
+│   └── update-cmdb.ts              # Update CMDB record
 └── utils/
-    └── httpbin-client.ts     # Mock HTTP client for demo (replaces real APIs)
+    └── mock-service-client.ts      # Mock HTTP client for demo (replaces real APIs)
 ```
 
 ## Setup
@@ -61,7 +55,7 @@ temporal server start-dev
 
 Start the worker:
 ```bash
-npm start
+npm run start.watch
 ```
 
 In another terminal, trigger the workflow:
