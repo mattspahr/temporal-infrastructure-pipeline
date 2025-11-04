@@ -25,5 +25,5 @@ export const pollTerraformRun = async (runId: string): Promise<string> => {
   }
 
   console.log(`[Activity] Terraform run ${runId} completed successfully`);
-  return "fail";
+  return "success";
 }

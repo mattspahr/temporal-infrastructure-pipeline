@@ -33,6 +33,7 @@ src/
 │   ├── createTerraformRun.ts       # Idempotent run creation
 │   ├── pollTerraformRun.ts         # Poll with heartbeats
 │   ├── destroyTerraformRun.ts      # Cleanup on failure
+│   ├── run-ansible-playbook.ts     # Run Ansible playbook
 │   ├── send-slack-notification.ts  # Send Slack notification
 │   └── update-service-now.ts       # Update ServiceNow ticket
 └── utils/
