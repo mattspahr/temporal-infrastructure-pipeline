@@ -18,7 +18,7 @@ An infrastructure team is looking for a modular and resilient approach to infras
 ![Business Workflow](./diagrams/workflow-text.png)
 
 ### Technical Implementation
-![Technical Workflow](./diagrams/technical-workflow.png)
+![Technical Workflow](./diagrams/workflow-technical.png)
 
 ## Project Structure
 
