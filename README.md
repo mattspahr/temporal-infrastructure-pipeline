@@ -27,6 +27,7 @@ src/
 ├── workflows.ts              # Main workflow orchestration
 ├── client.ts                 # Workflow execution trigger
 ├── worker.ts                 # Worker process
+├── api.ts                    # REST API server
 ├── activities/
 │   ├── createTerraformRun.ts       # Terraform run creation
 │   ├── getTerraformRunStatus.ts    # Get status of Terraform run
@@ -36,6 +37,11 @@ src/
 │   └── update-cmdb.ts              # Update CMDB record
 └── utils/
     └── mock-service-client.ts      # Mock HTTP client for demo (replaces real APIs)
+└── types/
+    └── WorkflowResponse.ts         # Workflow response type
+diagrams/
+├── workflow-text.png         # Business workflow diagram
+├── workflow-technical.png    # Technical workflow diagram
 ```
 
 ## Setup
