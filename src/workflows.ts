@@ -1,4 +1,4 @@
-import { ApplicationFailure, proxyActivities, sleep } from '@temporalio/workflow';
+import { ApplicationFailure, CancellationScope, proxyActivities, sleep } from '@temporalio/workflow';
 import * as activities from './activities';
 import { WorkflowResponse } from './types/WorkflowResponse';
 
@@ -11,7 +11,7 @@ const { createTerraformRun } = proxyActivities<typeof activities>({
   },
 });
 
-const { pollTerraformRun } = proxyActivities<typeof activities>({
+const { getTerraformRunStatus } = proxyActivities<typeof activities>({
   startToCloseTimeout: '30 minutes',
   heartbeatTimeout: '10 seconds',
   retry: {
@@ -49,13 +49,19 @@ export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): 
 
   const terraformRunId = await createTerraformRun(instanceName);
 
-  const result = await pollTerraformRun(terraformRunId);
+  while (true) {
+    const result = await getTerraformRunStatus(terraformRunId);
 
-  if (result !== "success") {
-    throw ApplicationFailure.create({
-      message: `Terraform run ${terraformRunId} failed`,
-      type: "TerraformRunFailed",
-    });
+    if (result === "applied") {
+      break;
+    } else if (result === "failed") {
+      throw ApplicationFailure.create({
+        message: `Terraform run ${terraformRunId} failed`,
+        type: "TerraformRunFailed",
+      });
+    }
+
+    await sleep('5 seconds');
   }
 
   try {
@@ -63,7 +69,10 @@ export const ec2SelfServiceWorkflow = async (params: { instanceName: string }): 
 
     await runAnsiblePlaybook(instanceName);
   } catch (error) {
-    await destroyTerraformRun(terraformRunId);
+    await CancellationScope.nonCancellable(async () => {
+      await destroyTerraformRun(terraformRunId);
+    });
+    
     throw ApplicationFailure.create({
       message: `Ansible playbook failed for instance ${instanceName}`,
       type: "AnsiblePlaybookFailed",

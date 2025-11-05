@@ -5,9 +5,9 @@ export const mockServiceClient = {
       return { runId };
     },
 
-    pollRunStatus: async (runId: string, phase: string): Promise<{ status: string }> => {
+    pollRunStatus: async (runId: string): Promise<{ status: string }> => {
       await simulateDelay(500);
-      return { status: phase };
+      return { status: getRunStatus() };
     },
 
     destroyRun: async (runId: string): Promise<void> => {
@@ -36,6 +36,12 @@ export const mockServiceClient = {
     }
   },
 };
+
+let index = 0;
+const getRunStatus = (): string => {
+  const terraformRunStatuses: string[] = ["pending", "planning", "applying", "applied"];
+  return terraformRunStatuses[index++ % terraformRunStatuses.length];
+}
 
 const simulateDelay = (ms: number): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms));

@@ -6,6 +6,5 @@ export const runAnsiblePlaybook = async (instanceName: string): Promise<string> 
     const playbookRunId = `ansible-${instanceName}-${context.info.workflowExecution.workflowId}-${context.info.activityId}`;
 
     await mockServiceClient.ansible.runPlaybook(playbookRunId, instanceName);
-
     return playbookRunId;
 };
