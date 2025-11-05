@@ -13,7 +13,6 @@ const { createTerraformRun } = proxyActivities<typeof activities>({
 
 const { getTerraformRunStatus } = proxyActivities<typeof activities>({
   startToCloseTimeout: '30 minutes',
-  heartbeatTimeout: '10 seconds',
   retry: {
     initialInterval: '10 seconds',
     maximumAttempts: 3,
