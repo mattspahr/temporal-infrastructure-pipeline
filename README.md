@@ -1,10 +1,10 @@
 # temporal-infrastructure-pipeline
 
-A demo project showing how Temporal orchestrates infrastructure provisioning workflows. This simulates an API-Driven, self-service EC2 provisioning pipeline using Terraform.
+## Use Case
+
+An infrastructure team is looking for a modular and resilient approach to infrastructure provisioning. They want to be able to provision and configure EC2 instances through a self-service API. They also want to be able to track the status of their infrastructure in a CMDB and receive notifications when instances are provisioned.
 
 ## What This Does
-
-The workflow provisions an EC2 instance through these steps:
 
 1. Create a Terraform run
 2. Poll the status of the Terraform run
@@ -67,6 +67,9 @@ npm run start.watch
 In another terminal, trigger the workflow:
 ```bash
 npm run workflow
+
+npm run workflow -- web-server-01
+npm run workflow -- prod-api-server
 ```
 
 ### Option 2: REST API
@@ -83,11 +86,7 @@ npm run api
 
 Trigger workflows via HTTP:
 ```bash
-# Provision a new instance
 curl -X POST http://localhost:3000/provision \
   -H "Content-Type: application/json" \
-  -d '{"instanceName": "my-instance"}'
-
-# Check workflow status
-curl http://localhost:3000/status/<workflowId>
+  -d '{"instanceName": "my-instance"}
 ```

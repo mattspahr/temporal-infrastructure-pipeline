@@ -15,7 +15,9 @@ const RunEC2SelfServiceWorkflow = async (instanceName: string) => {
   console.log(result);
 }
 
-RunEC2SelfServiceWorkflow('instance1').catch((err) => {
+const instanceName = process.argv[2] || 'INSTANCE_NAME';
+
+RunEC2SelfServiceWorkflow(instanceName).catch((err) => {
   console.error(err);
   process.exit(1);
 });
