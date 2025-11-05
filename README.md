@@ -7,14 +7,18 @@ A demo project showing how Temporal orchestrates infrastructure provisioning wor
 The workflow provisions an EC2 instance through these steps:
 
 1. Create a Terraform run
-2. Poll the run status of the run
+2. Poll the status of the Terraform run
 3. Run Ansible playbook
     - If successful, send notifications in parallel
         - Slack Notification
         - Update CMDB Record
     - If failed, destroy the Terraform run and fail the workflow
 
-![Workflow Diagram](./diagrams/workflow-text.png)
+### Business Flow
+![Business Workflow](./diagrams/workflow-text.png)
+
+### Technical Implementation
+![Technical Workflow](./diagrams/technical-workflow.png)
 
 ## Project Structure
 
@@ -25,7 +29,7 @@ src/
 ├── worker.ts                 # Worker process
 ├── activities/
 │   ├── createTerraformRun.ts       # Terraform run creation
-│   ├── pollTerraformRun.ts         # Poll status of run
+│   ├── getTerraformRunStatus.ts    # Get status of Terraform run
 │   ├── destroyTerraformRun.ts      # Cleanup on failure
 │   ├── run-ansible-playbook.ts     # Run Ansible playbook on new instance
 │   ├── send-slack-notification.ts  # Send Slack notification
@@ -53,6 +57,8 @@ temporal server start-dev
 
 ## Running the Workflow
 
+### Option 1: Direct CLI Execution
+
 Start the worker:
 ```bash
 npm run start.watch
@@ -61,4 +67,27 @@ npm run start.watch
 In another terminal, trigger the workflow:
 ```bash
 npm run workflow
+```
+
+### Option 2: REST API
+
+Start the worker:
+```bash
+npm run start.watch
+```
+
+In another terminal, start the API server:
+```bash
+npm run api
+```
+
+Trigger workflows via HTTP:
+```bash
+# Provision a new instance
+curl -X POST http://localhost:3000/provision \
+  -H "Content-Type: application/json" \
+  -d '{"instanceName": "my-instance"}'
+
+# Check workflow status
+curl http://localhost:3000/status/<workflowId>
 ```
